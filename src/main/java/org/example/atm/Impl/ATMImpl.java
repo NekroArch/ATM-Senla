@@ -32,6 +32,8 @@ public class ATMImpl implements ATM, Closeable {
     private float atmLimit;
     private final ICSVWriter csvWriter;
 
+    private static final long dayInMillis = 86400000;
+
     private final InputStreamReader inputStreamReader;
 
     public ATMImpl(Supplier<InputStream> inputStream, Supplier<OutputStream> outputStream, float atmLimit) {
@@ -58,20 +60,27 @@ public class ATMImpl implements ATM, Closeable {
             checkPin(cardInput);
 
             startSession(findCard(cardInput.getCardNumber()), cardInput);
-        } catch (ATMWorkException e) {
-            throw new ATMWorkException(e);
+
+
         } finally {
             endSession();
+
         }
+
     }
 
     private void startSession(Card card, UserIO cardInput) {
         boolean flag = true;
         while (flag) {
-            cardInput.showMenu();
+            cardInput.showMessage("""
+                1. Check balance.
+                2. Withdraw money from the account.
+                3. Deposit money into the account.
+                0. Exit.
+                """);
 
             switch (cardInput.getCommand()) {
-                case BALANCE -> System.out.println(card.getBalance()); //Передаелать это говно
+                case BALANCE -> cardInput.showMessage(card.getBalance().toString());
                 case WITHDRAW -> withdrawMoney(card, cardInput);
                 case DEPOSIT -> depositMoney(card, cardInput);
                 case EXIT -> flag = false;
@@ -87,6 +96,7 @@ public class ATMImpl implements ATM, Closeable {
         }
         atmLimit -= amount;
         card.setBalance(balance - amount);
+        cardInput.showMessage("Your operation was successful");
     }
 
     private void depositMoney(Card card, UserIO cardInput) {
@@ -96,6 +106,7 @@ public class ATMImpl implements ATM, Closeable {
         }
         atmLimit += amount;
         card.setBalance(card.getBalance() + amount);
+        cardInput.showMessage("Your operation was successful");
     }
 
     private void endSession() {
@@ -131,7 +142,7 @@ public class ATMImpl implements ATM, Closeable {
 
         Card card = findCard(cardInput.getCardNumber());
 
-        if (card.isLocked() && new Date().getTime() - card.getDate() < 86400000) {
+        if (card.isLocked() && new Date().getTime() - card.getDate() < dayInMillis) {
             throw new UserBlockException("Your card is blocked");
         }
 
@@ -142,7 +153,7 @@ public class ATMImpl implements ATM, Closeable {
                 return;
             }
             if (i != 2) {
-                System.out.println("Incorrect pin! Try again ");
+                cardInput.showMessage("Incorrect pin! Try again ");
             }
         }
         card.lock();

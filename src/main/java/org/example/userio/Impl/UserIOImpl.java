@@ -3,6 +3,7 @@ package org.example.userio.Impl;
 import org.example.userio.Command;
 import org.example.userio.UserIO;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class UserIOImpl implements UserIO {
@@ -27,14 +28,8 @@ public class UserIOImpl implements UserIO {
     }
 
     @Override
-    public void showMenu() {
-        System.out.println("""
-                1. Check balance.
-                2. Withdraw money from the account.
-                3. Deposit money into the account.
-                0. Exit.
-                """
-        );
+    public void showMessage(String message){
+        System.out.println(message);
     }
 
     @Override
@@ -45,7 +40,9 @@ public class UserIOImpl implements UserIO {
 
     @Override
     public Float getAmount() {
-        System.out.print("Input the desired amount.\n > ");
+        System.out.print("""
+                Input the desired amount.
+                >\s""");
         return terminal.nextFloat();
     }
 
